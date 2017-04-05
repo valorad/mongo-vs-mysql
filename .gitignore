@@ -250,3 +250,13 @@ paket-files/
 # JetBrains Rider
 .idea/
 *.sln.iml
+
+# vscode
+/.vscode
+/.vscode/*
+
+# Site specific
+/config/mongoVSmysql.json
+
+
+

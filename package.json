@@ -1,0 +1,25 @@
+{
+  "name": "mongo-vs-mysql",
+  "version": "0.1.0",
+  "description": "MongoDB vs MySQL storing files",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wcxaaa/mongo-vs-mysql.git"
+  },
+  "author": "Valorad",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/wcxaaa/mongo-vs-mysql/issues"
+  },
+  "homepage": "https://github.com/wcxaaa/mongo-vs-mysql#readme",
+  "dependencies": {
+    "mongoose": "^4.9.3"
+  },
+  "devDependencies": {
+    "mocha": "^3.2.0"
+  }
+}
