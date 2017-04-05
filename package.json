@@ -17,7 +17,8 @@
   },
   "homepage": "https://github.com/wcxaaa/mongo-vs-mysql#readme",
   "dependencies": {
-    "mongoose": "^4.9.3"
+    "mongoose": "^4.9.3",
+    "mysql": "^2.13.0"
   },
   "devDependencies": {
     "mocha": "^3.2.0"
