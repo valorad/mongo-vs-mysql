@@ -1,16 +1,18 @@
 const mongoInstance = require("../mongo/connection");
+const files = require("../presenter/filePresent").files;
+
 const fs = require('fs');
 const path = require('path');
 const grid = require('gridfs-stream');
 
-const assert = require('assert');
+//const assert = require('assert');
 
 //read settings synclly first
-const fileData = path.join(__dirname,'../data/files.json');
-const files = JSON.parse(fs.readFileSync(fileData, 'utf8'));
+// const fileData = path.join(__dirname,'../data/files.json');
+// const files = JSON.parse(fs.readFileSync(fileData, 'utf8'));
 
-describe.skip("Mongo storing files", function() {
-  this.slow(1*60*1000);
+describe("Mongo storing files", function() {
+  //this.slow(1*60*1000);
   this.timeout(5*60*1000);
   before((done) => {
     // runs before all tests in this block
@@ -24,6 +26,8 @@ describe.skip("Mongo storing files", function() {
   });
 
   it('write all given files to mongo', (done) => {
+      console.log("## Begain test: write all given files to mongo");
+      let timeStart = new Date().getTime();
       let gfs = grid(mongoInstance.connection.db, mongoInstance.mongo);
       // streaming to gridfs
       //filename to store in mongodb
@@ -40,11 +44,9 @@ describe.skip("Mongo storing files", function() {
       }
       writestream.on('close', function () {
           // do something with `file`
-          console.log(i + " file(s) has been written To DB");
+          console.log(" --> " + i + " file(s) has been written To MongoDB");
+          console.log(" **  This action took " + ((new Date).getTime() - timeStart) + " ms");
           done();
       });
   });
-
-
-
 });
