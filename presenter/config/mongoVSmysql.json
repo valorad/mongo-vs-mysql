@@ -1,0 +1,15 @@
+[{
+    "mongo": {
+        "db": "mvm",
+        "authDB": "admin",
+        "user": "root",
+        "password": "hkjl4848",
+        "port": 27017
+    },
+    "mysql": {
+        "host": "localhost",
+        "user": "root",
+        "password": "hkjl4848",
+        "database": "mvm"
+    }
+}]

@@ -9,7 +9,7 @@ const assert = require('assert');
 const fileData = path.join(__dirname,'../data/files.json');
 const files = JSON.parse(fs.readFileSync(fileData, 'utf8'));
 
-describe("Mongo storing files", function() {
+describe.skip("Mongo storing files", function() {
   this.slow(1*60*1000);
   this.timeout(5*60*1000);
   before((done) => {

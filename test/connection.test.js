@@ -2,16 +2,19 @@
 var mongoInstance;
 var mysqlInstance;
 
-describe.skip("Mongo's turn", () => {
+describe("Mongo's turn", () => {
     it('connection to mongo', () => {
         mongoInstance = require("../mongo/connection");
     });
 });
 
-describe.skip("MySQL's turn", () => {
+describe("MySQL's turn", () => {
     it('connection to mysql', () => {
         mysqlInstance = require("../mysql/connection");
-        mysqlInstance.connect();
-        mysqlInstance.end();
+        mysqlInstance.getConnection(function(err, connection) {
+            // Do nothing, release the connection immediately
+            if (err) throw error;
+            connection.release();
+        });
     });
 });
