@@ -10,7 +10,7 @@ var mysqlConnection; // to store single copy from mysql conn pool
 // const fileData = path.join(__dirname,'../data/files.json');
 // const files = JSON.parse(fs.readFileSync(fileData, 'utf8'));
 
-describe('MySQL storing files', function() {
+describe.skip('MySQL storing files', function() {
   //this.slow(1*60*1000);
   this.timeout(5*60*1000);
   before((done) => {
@@ -31,7 +31,7 @@ describe('MySQL storing files', function() {
   });
 
   it('MySQL stores all given file(s) to table', () => {
-    console.log("## Begain test: MySQL stores all given file(s) to table");
+    console.log("## Begin test: MySQL stores all given file(s) to table");
     let timeStart = new Date().getTime();
     let i = 0; //counter
     for (let file of files) {

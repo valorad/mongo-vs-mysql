@@ -1,15 +1,11 @@
 const mongoInstance = require("../mongo/connection");
 const files = require("../presenter/filePresent").files;
-
+const folders = require("../presenter/filePresent").folders;
 const fs = require('fs');
 const path = require('path');
 const grid = require('gridfs-stream');
 
-//const assert = require('assert');
-
-//read settings synclly first
-// const fileData = path.join(__dirname,'../data/files.json');
-// const files = JSON.parse(fs.readFileSync(fileData, 'utf8'));
+const walk = require('walk');
 
 describe("Mongo storing files", function() {
   //this.slow(1*60*1000);
@@ -25,8 +21,8 @@ describe("Mongo storing files", function() {
     });
   });
 
-  it('write all given files to mongo', (done) => {
-      console.log("## Begain test: write all given files to mongo");
+  it.skip('write all given files to mongo', (done) => {
+      console.log("## Begin test: write all given files to mongo");
       let timeStart = new Date().getTime();
       let gfs = grid(mongoInstance.connection.db, mongoInstance.mongo);
       // streaming to gridfs
@@ -44,9 +40,87 @@ describe("Mongo storing files", function() {
       }
       writestream.on('close', function () {
           // do something with `file`
-          console.log(" --> " + i + " file(s) has been written To MongoDB");
+          console.log(" --> " + i + " file(s) has been written to MongoDB");
           console.log(" **  This action took " + ((new Date).getTime() - timeStart) + " ms");
           done();
       });
   });
+
+  it('write all files under a specific folder to mongo', (done) => {
+      console.log("## Begin test: write all files under a specific folder to mongo");
+      let timeStart = new Date().getTime();
+
+      let givenFiles = []; // stores files detected in the folders
+      let folderCount = 0; //folder number counter
+      let i = 0; //single folder file counter
+      let fileCount = 0; // all files in this action
+      
+      
+      let gfs = grid(mongoInstance.connection.db, mongoInstance.mongo);
+      let walker;
+      
+      for (let folder of folders) {
+        
+        // for each folder, get the path
+        let givenFolder = path.join(__dirname, folder.path, folder.name);
+        //console.log(givenFolder);
+ 
+        // read the list of all files under this folder
+        
+        walker = walk.walk(givenFolder, { followLinks: false });
+        walker.on('file', (root, stat, next) => {
+            // Add this file to the list of files
+
+            givenFiles.push({
+                file: "",
+                path: root,
+                name: stat.name,
+                sizeLvl: ""
+            });
+
+            next();
+        });
+
+        walker.on('end', () => {
+          //console.log(givenFiles);
+          folderCount++;
+          fileCount += i;
+
+          if (folderCount >= folders.length - 1) {
+            // so it's the last folder. After completed "walking",  mongo does storage jobs.
+            //console.log(givenFiles.length);
+            let writestream;
+
+            // begin writing files to mongo
+            for (let file of givenFiles) {
+              writestream = gfs.createWriteStream({
+                  filename: file.name
+              });
+
+              let filePath = path.join(file.path, file.name);
+              fs.createReadStream(filePath).pipe(writestream);
+              i++;
+            }
+
+            if (writestream !== (null||undefined)) {
+              writestream.on('close', function () {
+                  // do something with `file`
+                  console.log(" --> " + fileCount + " file(s) under " + folderCount + " folders has been written to MongoDB");
+                  console.log(" **  This action took " + ((new Date).getTime() - timeStart) + " ms");
+              });
+            } else {
+                console.warn("------------------------------------------------------------");
+                console.warn("--- Warning! There's probably nothing in the given folder! ---");
+                console.warn("------------------------------------------------------------");
+                console.log(" --> " + fileCount + " file(s) under " + folderCount + " folders has been written to MongoDB");
+                console.log(" **  This action took " + ((new Date).getTime() - timeStart) + " ms");
+            }
+            done();
+          }
+        });
+      } //for
+
+  });
 });
+
+
