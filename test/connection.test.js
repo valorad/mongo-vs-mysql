@@ -1,4 +1,5 @@
-//const mongoose = require("mongoose");
+"use strict";
+
 var mongoInstance;
 var mysqlInstance;
 

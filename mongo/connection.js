@@ -1,3 +1,4 @@
+"use strict";
 const mongoose = require("mongoose");
 const mvm = require("../presenter/config");
 
