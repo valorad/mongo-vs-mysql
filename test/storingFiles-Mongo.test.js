@@ -9,7 +9,7 @@ const grid = require('gridfs-stream');
 
 const walk = require('walk');
 
-describe.skip("Mongo storing files", function() {
+describe("Mongo storing files", function() {
   //this.slow(1*60*1000);
   this.timeout(5*60*1000);
   before((done) => {
@@ -23,7 +23,7 @@ describe.skip("Mongo storing files", function() {
     });
   });
 
-  it.skip('write all given files to mongo', (done) => {
+  it('write all given files to mongo', (done) => {
       console.log("## Begin test: write all given files to mongo");
       let timeStart = new Date().getTime();
       let gfs = grid(mongoInstance.connection.db, mongoInstance.mongo);
@@ -38,8 +38,10 @@ describe.skip("Mongo storing files", function() {
 
         let filePath = path.join(__dirname, file.path, file.name);
         fs.createReadStream(filePath).pipe(writestream);
+        console.log("# prepared file " + i);
         i++;
       }
+      console.log("# started writing. ");
       writestream.on('close', function () {
           // do something with `file`
           console.log(" --> " + i + " file(s) has been written to MongoDB");
@@ -84,7 +86,7 @@ describe.skip("Mongo storing files", function() {
 
           folderCount++;
           
-          if (folderCount >= folders.length - 1) {
+          if (folderCount >= folders.length) {
             // so it's the last folder. After completed "walking",  mongo does storage jobs.
 
             let writestream;

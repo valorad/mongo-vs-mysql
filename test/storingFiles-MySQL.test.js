@@ -10,7 +10,7 @@ var mysqlConnection; // to store single copy from mysql conn pool
 // const fileData = path.join(__dirname,'../data/files.json');
 // const files = JSON.parse(fs.readFileSync(fileData, 'utf8'));
 
-describe('MySQL storing files', function() {
+describe.skip('MySQL storing files', function() {
   //this.slow(1*60*1000);
   this.timeout(5*60*1000);
   before((done) => {
@@ -41,38 +41,25 @@ describe('MySQL storing files', function() {
             content: fs.readFileSync(filePath)
         }
         let base64 = new Buffer(thisFile.content, 'binary').toString('base64');
-        //console.log(thisFile);
+
         //mysqlConnection.query(`INSERT INTO files SET name="${thisFile.name}", content="${Buffer((thisFile.content), 'utf8')}"`, (err, result) => {
+        // preparing insert query
         let sql = "INSERT INTO files (name, content) VALUES (?, ?)";
         let inserts = [thisFile.name, base64];
         sql = mysqlConnection.format(sql, inserts);
-        //console.log(sql);
+
+        // start inserting
         mysqlConnection.query(sql,  (err, result) => {
             if (err) { console.error(err) }
-            console.log("inserted");
+            console.log("#inserted file " + i);
             i++;
-            // mysqlConnection.query(`SELECT * FROM files WHERE name=${thisFile.name}`, (err, rows, fields) => {
-                // if (err) { console.error(err) }
-                // console.log('File: ', rows[0].name);
-                if (i >= files.length) {
-                    //so it's the last file mysql is handling with
-                    console.log(" --> " + i + " file(s) has been inserted into MySQL");
-                    console.log(" **  This action took " + ((new Date).getTime() - timeStart) + " ms");
-                    done();
-                }
-            // });
+            if (i >= files.length) {
+                //so it's the last file mysql is handling with
+                console.log(" --> " + i + " file(s) has been inserted into MySQL");
+                console.log(" **  This action took " + ((new Date).getTime() - timeStart) + " ms");
+                done();
+            }
         });
-
-        // mysqlConnection.query('SELECT * FROM files', function (error, results, fields) {
-        //     // And done with the connection.
-        //     console.log(results);
-        //     //mysqlConnection.release();
-
-        //     // Handle error after the release.
-        //     if (error) throw error;
-
-        //     // Don't use the connection here, it has been returned to the pool.
-        // });
     }
   });
 
