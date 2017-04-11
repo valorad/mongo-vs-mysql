@@ -19,7 +19,7 @@
   "dependencies": {
     "gridfs-stream": "^1.1.1",
     "mongoose": "^4.9.3",
-    "mysql": "^2.13.0",
+    "mysql2": "^1.2.0",
     "walk": "^2.3.9"
   },
   "devDependencies": {

@@ -9,7 +9,7 @@ const grid = require('gridfs-stream');
 
 const walk = require('walk');
 
-describe("Mongo storing files", function() {
+describe.skip("Mongo storing files", function() {
   //this.slow(1*60*1000);
   this.timeout(5*60*1000);
   before((done) => {
@@ -48,15 +48,13 @@ describe("Mongo storing files", function() {
       });
   });
 
-  it('write all files under a specific folder to mongo', (done) => {
+  it.skip('write all files under a specific folder to mongo', (done) => {
       console.log("## Begin test: write all files under a specific folder to mongo");
       let timeStart = new Date().getTime();
 
       let givenFiles = []; // stores files detected in the folders
       let folderCount = 0; //folder number counter
-      let i = 0; //single folder file counter
-      //let fileCount = 0; // all files in this action
-      
+      let i = 0; //folder file counter
       
       let gfs = grid(mongoInstance.connection.db, mongoInstance.mongo);
       let walker;
@@ -65,7 +63,6 @@ describe("Mongo storing files", function() {
         
         // for each folder, get the path
         let givenFolder = path.join(__dirname, folder.path, folder.name);
-        //console.log(givenFolder);
  
         // read the list of all files under this folder
         
@@ -79,19 +76,17 @@ describe("Mongo storing files", function() {
                 name: stat.name,
                 sizeLvl: ""
             });
-
             
             next();
         });
 
         walker.on('end', () => {
-          //console.log(givenFiles);
+
           folderCount++;
           
-
           if (folderCount >= folders.length - 1) {
             // so it's the last folder. After completed "walking",  mongo does storage jobs.
-            //console.log(givenFiles.length);
+
             let writestream;
 
             // begin writing files to mongo

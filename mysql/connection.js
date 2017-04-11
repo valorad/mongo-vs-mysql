@@ -1,6 +1,6 @@
 'use strict';
 
-const mysql = require('mysql');
+const mysql = require('mysql2');
 const mvm = require("../presenter/config");
 
 // create connection
@@ -14,4 +14,3 @@ const mysqlInstance = mysql.createPool({
 });
 
 module.exports = mysqlInstance;
-// has to call connect() and end() in further tests.
