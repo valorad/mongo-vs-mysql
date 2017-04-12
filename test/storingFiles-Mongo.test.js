@@ -2,7 +2,9 @@
 
 const mongoInstance = require("../mongo/connection");
 const files = require("../presenter/filePresent").files;
-const folders = require("../presenter/filePresent").folders;
+const formFileList = require("../presenter/filePresent").formFileList;
+//const filePromise = require("../presenter/filePresent").filePromise;
+//const folders = require("../presenter/filePresent").folders;
 const fs = require('fs');
 const path = require('path');
 const grid = require('gridfs-stream');
@@ -23,7 +25,7 @@ describe("Mongo storing files", function() {
     });
   });
 
-  it('write all given files to mongo', (done) => {
+  it.skip('write all given files to mongo', (done) => {
       console.log("## Begin test: write all given files to mongo");
       let timeStart = new Date().getTime();
       let gfs = grid(mongoInstance.connection.db, mongoInstance.mongo);
@@ -50,78 +52,58 @@ describe("Mongo storing files", function() {
       });
   });
 
-  it.skip('write all files under a specific folder to mongo', (done) => {
-      console.log("## Begin test: write all files under a specific folder to mongo");
-      let timeStart = new Date().getTime();
+  it('write all files under single(multiple) folder(s) to mongo', (done) => {
+    console.log("## Begin test: write all files under single(multiple) folder(s) to mongo");
+    let timeStart = new Date().getTime();
+    
+    formFileList.then((fileList) => {
 
-      let givenFiles = []; // stores files detected in the folders
-      let folderCount = 0; //folder number counter
-      let i = 0; //folder file counter
-      
-      let gfs = grid(mongoInstance.connection.db, mongoInstance.mongo);
-      let walker;
-      
-      for (let folder of folders) {
-        
-        // for each folder, get the path
-        let givenFolder = path.join(__dirname, folder.path, folder.name);
- 
-        // read the list of all files under this folder
-        
-        walker = walk.walk(givenFolder, { followLinks: false });
-        walker.on('file', (root, stat, next) => {
-            // Add this file to the list of files
+      console.log(`  -- Mongo has received ${fileList.fileNum} file(s) under ${fileList.folderNum} folder(s) --`);
 
-            givenFiles.push({
-                file: "",
-                path: root,
-                name: stat.name,
-                sizeLvl: ""
+      if (fileList.fileNum > 0) {
+        // only when there is a file, that mongo go storing.
+        let gfs = grid(mongoInstance.connection.db, mongoInstance.mongo);
+        let writestream;
+        let i = 0; //local file counter
+
+        // begin writing files to mongo
+        for (let file of fileList.files) {
+            writestream = gfs.createWriteStream({
+                filename: file.name
             });
-            
-            next();
-        });
 
-        walker.on('end', () => {
+            let filePath = path.join(file.path, file.name);
+            fs.createReadStream(filePath).pipe(writestream);
+            i++;
+        }
 
-          folderCount++;
-          
-          if (folderCount >= folders.length) {
-            // so it's the last folder. After completed "walking",  mongo does storage jobs.
-
-            let writestream;
-
-            // begin writing files to mongo
-            for (let file of givenFiles) {
-              writestream = gfs.createWriteStream({
-                  filename: file.name
-              });
-
-              let filePath = path.join(file.path, file.name);
-              fs.createReadStream(filePath).pipe(writestream);
-              i++;
-            }
-
-            if (writestream !== (null||undefined)) {
-              writestream.on('close', function () {
-                  // do something with `file`
-                  console.log(" --> " + i + " file(s) under " + folderCount + " folders has been written to MongoDB");
-                  console.log(" **  This action took " + ((new Date).getTime() - timeStart) + " ms");
-                  done();
-              });
-            } else {
-                console.warn("------------------------------------------------------------");
-                console.warn("--- Warning! There's probably nothing in the given folder! ---");
-                console.warn("------------------------------------------------------------");
-                console.log(" --> " + i + " file(s) under " + folderCount + " folder(s) has been written to MongoDB");
+        if (writestream !== (null||undefined)) {
+            writestream.on('close', function () {
+                // do something with `file`
+                console.log(" --> " + i + " file(s) under " + fileList.folderNum + " folder(s) has been written to MongoDB");
                 console.log(" **  This action took " + ((new Date).getTime() - timeStart) + " ms");
                 done();
-            }
-          }
-        });
-      } //for
+            });
+        } else {
+            console.warn("---------------------------------------------------------------");
+            console.warn("---- Warning! There's probably nothing in the given folder! ----");
+            console.warn("--- Or you have encountered an error writing files to MongoDB! ---");
+            console.warn("-----------------------------------------------------------------");
+            console.log(" --> " + i + " file(s) under " + fileList.folderNum + " folder(s) has been written to MongoDB");
+            console.log(" **  This action took " + ((new Date).getTime() - timeStart) + " ms");
+            done();
+        }
 
-  });
+      } else {
+        console.warn("-------------------------------------------------------");
+        console.warn("--- Warning! There is nothing in the given folder! ---");
+        console.warn("-------------------------------------------------------");
+        console.log(" --> " + fileList.fileNum + " file(s) under " + fileList.folderNum + " folder(s) has been written to MongoDB");
+        console.log(" **  This action took " + ((new Date).getTime() - timeStart) + " ms.");
+        done();
+      }
+    }); //promise
+  });// it
 });
 
 
