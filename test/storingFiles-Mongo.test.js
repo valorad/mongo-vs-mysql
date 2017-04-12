@@ -11,7 +11,7 @@ const grid = require('gridfs-stream');
 
 const walk = require('walk');
 
-describe("Mongo storing files", function() {
+describe.skip("Mongo storing files", function() {
   //this.slow(1*60*1000);
   this.timeout(5*60*1000);
   before((done) => {
