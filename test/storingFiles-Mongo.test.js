@@ -11,27 +11,35 @@ const grid = require('gridfs-stream');
 
 const walk = require('walk');
 
-describe.skip("Mongo storing files", function() {
+describe("Mongo storing files", function() {
   //this.slow(1*60*1000);
-  this.timeout(5*60*1000);
+  this.timeout(3*60*60*1000);
   before((done) => {
     
     // runs before all tests in this block
-    
+
     // drop everything in that db to continue tests
-    mongoInstance.connection
-    .on('connected', () => {
-        console.log("after");
-        mongoInstance.connection.db.runCommand( { dropDatabase: 1 } ).then(()=> {
-          console.log("mongo");
-          done();
-        }
-     );
+    mongoInstance.connection.once('connected', ()=>{
+        console.log("猪");
     });
-    done();
+
+    mongoInstance.connection.db.dropDatabase().then(()=>{
+        done();
+    });
+
+    // mongoInstance.connection
+    // .on('connected', () => {
+    //     console.log("after");
+    //     mongoInstance.connection.db.runCommand( { dropDatabase: 1 } ).then(()=> {
+    //       console.log("mongo");
+    //       done();
+    //     }
+    //  );
+    // });
+    // done();
   });
 
-  it.skip('write all given files to mongo', (done) => {
+  it('write all given files to mongo', (done) => {
       console.log("## Begin test: write all given files to mongo");
       let timeStart = new Date().getTime();
       let gfs = grid(mongoInstance.connection.db, mongoInstance.mongo);

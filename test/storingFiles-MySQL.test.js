@@ -10,6 +10,7 @@ var mysqlConnection; // to store single copy from mysql conn pool
 const _1MB = 1*1024*1024;
 const _110MB = 110*_1MB;
 const _100MB = 100*_1MB;
+const _50MB = 50*_1MB;
 const _20MB = 20*_1MB;
 const _10MB = 10*_1MB;
 
@@ -26,6 +27,7 @@ const startQuery = (filename, bulk) => {
 
     mysqlConnection.query(sql, (err, result)=>{
       if (err) { console.error(err) }
+      base64Content = null;
         resolve("success");
     });
   });
@@ -37,20 +39,17 @@ const partReadInsert = async (fileName, readStream) => {
     let i = 0;
     //let prevChunkLength = 0;
     readStream.on('data', async (chunk)=> {
-      //chunk.copy(bulk, prevChunkLength, 0);
+
       bulk = Buffer.concat([bulk, chunk]);
-      //prevChunkLength += chunk.length;
-      //bulk += chunk;
-      //console.log(bulk.length);
-      console.log(process.memoryUsage());
-      if (bulk.length >= _10MB) {
 
-        await methods.startQuery(fileName, bulk);
-        //prevChunkLength = 0;
+      if (bulk.length >= _50MB) {
+        //console.log(process.memoryUsage().external);
+        //console.log(bulk.length);
+        methods.startQuery(fileName, bulk);
         bulk = Buffer.from("", 'binary');
-
-        console.log(i);
-
+        if (i % 5 === 0) {
+          console.log(i);
+        }
         i++;
       }
       
@@ -97,7 +96,7 @@ describe('MySQL storing files', function() {
       let filePath = path.join(file.path, file.name);
       let thisFile = {
         name: file.name,
-        readStream: fs.createReadStream(filePath),
+        readStream: fs.createReadStream(filePath)
       }
 
       //thisFile.readStream.pipe(thisFile.writeStream);
@@ -132,11 +131,11 @@ describe('MySQL storing files', function() {
 
   // };
 
-  it.skip('MySQL inserts all file(s) under folder(s)', function(done) {
+  it.skip('MySQL inserts all file(s) under folder(s)', async function() {
     console.log("## Begin test: MySQL inserts all file(s) under single(multiple) folder(s)");
     let timeStart = new Date().getTime();
 
-    formFileList.then((fileList) => {
+    formFileList.then(async (fileList) => {
       // after file list build up, mysql starts inserting files
 
       console.log(`  -- MySQL has got ${fileList.fileNum} file(s) under ${fileList.folderNum} folder(s) --`);
@@ -150,30 +149,15 @@ describe('MySQL storing files', function() {
           let filePath = path.join(file.path, file.name);
           let thisFile = {
             name: file.name,
-            content: fs.readFileSync(filePath)
+            readStream: fs.createReadStream(filePath)
           }
-          let base64Content = Buffer.from(thisFile.content, 'binary').toString('base64');
 
-          // preparing insert query
-          let sql = "INSERT INTO files (name, content) VALUES (?, ?)";
-          let inserts = [thisFile.name, base64Content];
-          sql = mysqlConnection.format(sql, inserts);
-
-          // start inserting
-          mysqlConnection.query(sql,  (err, result) => {
-            if (err) { console.error(err) }
-            
-            console.log("#inserted file " + i);
-            i++;
-
-            if (i >= fileList.files.length) {
-              //so it's the last file mysql is handling with
-              console.log(" --> " + i + " file(s) has been inserted into MySQL");
-              console.log(" **  This action took " + ((new Date).getTime() - timeStart) + " ms");
-              done();
-            }
-          });
+          await methods.partReadInsert(thisFile.name, thisFile.readStream);
+          i++;
         }
+          // for over , so it's the last file mysql is handling with
+          console.log(" --> " + i + " file(s) has been inserted into MySQL");
+          console.log(" **  This action took " + ((new Date).getTime() - timeStart) + " ms");
 
       } else {
         console.warn("-------------------------------------------------------");
