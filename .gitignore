@@ -258,5 +258,5 @@ paket-files/
 # Site specific
 /config/mongoVSmysql.json
 /data
-
+*.lock
 
