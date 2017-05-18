@@ -33,20 +33,23 @@ const startQuery = (filename, bulk) => {
 
 const partReadInsert = async (fileName, readStream) => {
   return new Promise((resolve, reject) => {
-    let bulk = Buffer.alloc(_20MB);
+    let bulk = Buffer.from("", 'binary');
     let i = 0;
-    let prevChunkLength = 0;
+    //let prevChunkLength = 0;
     readStream.on('data', async (chunk)=> {
-      chunk.copy(bulk, prevChunkLength, 0);
-      prevChunkLength += chunk.length;
+      //chunk.copy(bulk, prevChunkLength, 0);
+      bulk = Buffer.concat([bulk, chunk]);
+      //prevChunkLength += chunk.length;
       //bulk += chunk;
-      if (Buffer.byteLength(bulk, 'binary') >= _10MB) {
+      //console.log(bulk.length);
+      console.log(process.memoryUsage());
+      if (bulk.length >= _10MB) {
 
         await methods.startQuery(fileName, bulk);
-        prevChunkLength = 0;
-        bulk = new Buffer.alloc(_20MB);
+        //prevChunkLength = 0;
+        bulk = Buffer.from("", 'binary');
 
-          console.log(i);
+        console.log(i);
 
         i++;
       }
