@@ -20,7 +20,7 @@ function formFileList(folders) {
       // read the list of all files under this folder
       
       let givenFiles = []; // stores files detected in the folders
-      let givenFolder = path.join(__dirname, folder.path, folder.name);
+      let givenFolder = path.join(folder.path, folder.name);
       let folderCount = 0; //folder number counter
       let fileCount = 0; // counts file number
 

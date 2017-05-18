@@ -7,10 +7,67 @@ const fs = require('fs');
 const path = require('path');
 var mysqlConnection; // to store single copy from mysql conn pool
 
+const _1MB = 1*1024*1024;
+const _110MB = 110*_1MB;
+const _100MB = 100*_1MB;
+const _20MB = 20*_1MB;
+const _10MB = 10*_1MB;
+
+const startQuery = (filename, bulk) => {
+  return new Promise((resolve, reject) => {
+    let base64Content = bulk.toString('base64');
+    let sql = "INSERT INTO files (name, content) VALUES (?, ?)";
+    let inserts = [filename, base64Content];
+    sql = mysqlConnection.format(sql, inserts);
+
+    // no escape
+    
+    //let sql = `INSERT INTO files (name, content) VALUES (${filename}, ${base64Content})`;
+
+    mysqlConnection.query(sql, (err, result)=>{
+      if (err) { console.error(err) }
+        resolve("success");
+    });
+  });
+}
+
+const partReadInsert = async (fileName, readStream) => {
+  return new Promise((resolve, reject) => {
+    let bulk = Buffer.alloc(_20MB);
+    let i = 0;
+    let prevChunkLength = 0;
+    readStream.on('data', async (chunk)=> {
+      chunk.copy(bulk, prevChunkLength, 0);
+      prevChunkLength += chunk.length;
+      //bulk += chunk;
+      if (Buffer.byteLength(bulk, 'binary') >= _10MB) {
+
+        await methods.startQuery(fileName, bulk);
+        prevChunkLength = 0;
+        bulk = new Buffer.alloc(_20MB);
+
+          console.log(i);
+
+        i++;
+      }
+      
+    });
+    readStream.on('end', async ()=> {
+      await methods.startQuery(fileName, bulk);
+      console.log(i);
+      resolve(i);
+    });
+  });
+};
+
+const methods = {
+  startQuery: startQuery,
+  partReadInsert: partReadInsert
+}
 
 describe('MySQL storing files', function() {
   //this.slow(1*60*1000);
-  this.timeout(5*60*1000);
+  this.timeout(3*60*60*1000);
   before((done) => {
     // runs before all tests in this block
     mysqlInstance.getConnection((err, connection) => {
@@ -28,42 +85,51 @@ describe('MySQL storing files', function() {
     });
   });
 
-  it.skip('MySQL stores all given file(s) to table', (done) => {
+  it('MySQL stores all given file(s) to table', async () => {
     console.log("## Begin test: MySQL stores all given file(s) to table");
     let timeStart = new Date().getTime();
-    let i = 0; //counter
+    let counter = 0;
+    
     for (let file of files) {
-      let filePath = path.join(__dirname, file.path, file.name);
+      let filePath = path.join(file.path, file.name);
       let thisFile = {
         name: file.name,
-        content: fs.readFileSync(filePath)
+        readStream: fs.createReadStream(filePath),
       }
-      let base64Content = Buffer.from(thisFile.content, 'binary').toString('base64');
 
-      //mysqlConnection.query(`INSERT INTO files SET name="${thisFile.name}", content="${Buffer((thisFile.content), 'utf8')}"`, (err, result) => {
-      // preparing insert query
-      let sql = "INSERT INTO files (name, content) VALUES (?, ?)";
-      let inserts = [thisFile.name, base64Content];
-      sql = mysqlConnection.format(sql, inserts);
+      //thisFile.readStream.pipe(thisFile.writeStream);
 
-      // start inserting
-      mysqlConnection.query(sql,  (err, result) => {
-        if (err) { console.error(err) }
-        
-        console.log("#inserted file " + i);
-        i++;
-
-        if (i >= files.length) {
-          //so it's the last file mysql is handling with
-          console.log(" --> " + i + " file(s) has been inserted into MySQL");
-          console.log(" **  This action took " + ((new Date).getTime() - timeStart) + " ms");
-          done();
-        }
-      });
+    await methods.partReadInsert(thisFile.name, thisFile.readStream);
+    counter++;
+       
     }
+    // for over, so all files have been handled by mysql
+    console.log(" --> " + counter + " file(s) has been inserted into MySQL");
+    console.log(" **  This action took " + ((new Date).getTime() - timeStart) + " ms");
   });
 
-  it('MySQL inserts all file(s) under folder(s)', function(done) {
+  // let startQuery = (bufferGroup, filename) => {
+  //   return new Promise((resolve, reject) => {
+  //     let i = 0;
+  //     for (let binSeg of bufferGroup) {
+  //       let base64Seg = binSeg.toString('base64');
+  //       // preparing insert query
+  //       let sql = "INSERT INTO files (name, content) VALUES (?, ?)";
+  //       let inserts = [filename, base64Seg];
+  //       sql = mysqlConnection.format(sql, inserts);
+  //       mysqlConnection.query(sql, (err, result)=> {
+  //         i++;
+  //         if (err) { console.error(err) }
+  //         if (i >= bufferGroup.length) {
+  //           resolve(i);
+  //         }
+  //       });
+  //     }
+  //   });
+
+  // };
+
+  it.skip('MySQL inserts all file(s) under folder(s)', function(done) {
     console.log("## Begin test: MySQL inserts all file(s) under single(multiple) folder(s)");
     let timeStart = new Date().getTime();
 

@@ -15,14 +15,20 @@ describe.skip("Mongo storing files", function() {
   //this.slow(1*60*1000);
   this.timeout(5*60*1000);
   before((done) => {
+    
     // runs before all tests in this block
     
     // drop everything in that db to continue tests
     mongoInstance.connection
-    .once('connected', () => {
-        mongoInstance.connection.db.dropDatabase();
-        done();
+    .on('connected', () => {
+        console.log("after");
+        mongoInstance.connection.db.runCommand( { dropDatabase: 1 } ).then(()=> {
+          console.log("mongo");
+          done();
+        }
+     );
     });
+    done();
   });
 
   it.skip('write all given files to mongo', (done) => {
@@ -38,7 +44,7 @@ describe.skip("Mongo storing files", function() {
             filename: file.name
         });
 
-        let filePath = path.join(__dirname, file.path, file.name);
+        let filePath = path.join(file.path, file.name);
         fs.createReadStream(filePath).pipe(writestream);
         console.log("# prepared file " + i);
         i++;
@@ -52,7 +58,7 @@ describe.skip("Mongo storing files", function() {
       });
   });
 
-  it('write all files under single(multiple) folder(s) to mongo', (done) => {
+  it.skip('write all files under single(multiple) folder(s) to mongo', (done) => {
     console.log("## Begin test: write all files under single(multiple) folder(s) to mongo");
     let timeStart = new Date().getTime();
     
