@@ -25,8 +25,8 @@ const startQuery = (filename, bulk) => {
     
     //let sql = `INSERT INTO files (name, content) VALUES (${filename}, ${base64Content})`;
 
-    mysqlConnection.query(sql, (err, result)=>{
-      if (err) { console.error(err) }
+    mysqlConnection.query({sql: sql, timeout: 3*60*60*1000}, (err, result)=>{
+      if (err) { throw err }
       base64Content = null;
         resolve("success");
     });
@@ -72,7 +72,7 @@ describe('MySQL storing files', function() {
   this.timeout(3*60*60*1000);
   before((done) => {
     // runs before all tests in this block
-    mysqlInstance.getConnection((err, connection) => {
+    mysqlInstance.getConnection(async (err, connection) => {
       if (err) {
         console.error('error connecting: ' + err.stack);
         return;
@@ -80,10 +80,15 @@ describe('MySQL storing files', function() {
       mysqlConnection = connection;
       console.log('connected as id ' + mysqlConnection.threadId);
       // drop everything in files table to continue tests
+      await mysqlConnection.query(`SET GLOBAL max_allowed_packet=${200*1024*1024*1024}`, (err, result)=>{
+        if (err) { console.error(err); }
+      });
+
       mysqlConnection.query('TRUNCATE TABLE files', (error, results, fields) => {
         if (error) throw error;
         done();
       });
+
     });
   });
 
@@ -109,27 +114,6 @@ describe('MySQL storing files', function() {
     console.log(" --> " + counter + " file(s) has been inserted into MySQL");
     console.log(" **  This action took " + ((new Date).getTime() - timeStart) + " ms");
   });
-
-  // let startQuery = (bufferGroup, filename) => {
-  //   return new Promise((resolve, reject) => {
-  //     let i = 0;
-  //     for (let binSeg of bufferGroup) {
-  //       let base64Seg = binSeg.toString('base64');
-  //       // preparing insert query
-  //       let sql = "INSERT INTO files (name, content) VALUES (?, ?)";
-  //       let inserts = [filename, base64Seg];
-  //       sql = mysqlConnection.format(sql, inserts);
-  //       mysqlConnection.query(sql, (err, result)=> {
-  //         i++;
-  //         if (err) { console.error(err) }
-  //         if (i >= bufferGroup.length) {
-  //           resolve(i);
-  //         }
-  //       });
-  //     }
-  //   });
-
-  // };
 
   it.skip('MySQL inserts all file(s) under folder(s)', async function() {
     console.log("## Begin test: MySQL inserts all file(s) under single(multiple) folder(s)");

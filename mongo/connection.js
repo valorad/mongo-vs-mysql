@@ -4,7 +4,17 @@ const mvm = require("../presenter/config");
 
 mongoose.Promise = global.Promise;
 
-const mongoInstance = mongoose.connect(`mongodb://${ mvm.mongo.user }:${ mvm.mongo.password }@localhost/${ mvm.mongo.db }?authSource=${ mvm.mongo.authDB }`);
+const mongoInstance = mongoose.connect(
+    `mongodb://${ mvm.mongo.user }:${ mvm.mongo.password }@localhost/${ mvm.mongo.db }?authSource=${ mvm.mongo.authDB }`,
+    {
+        server: {
+            socketOptions: {
+                socketTimeoutMS: 3*60*60*1000,
+                connectTimeoutMS: 3*60*60*1000
+            }
+        }
+    }
+);
 
 mongoose.connection
 .once('open', () => {
