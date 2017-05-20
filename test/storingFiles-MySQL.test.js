@@ -36,7 +36,7 @@ const startQuery = (filename, bulk) => {
 const partReadInsert = async (fileName, readStream) => {
   return new Promise((resolve, reject) => {
     let bulk = Buffer.from("", 'binary');
-    let i = 0;
+    let i = 1;
     //let prevChunkLength = 0;
     readStream.on('data', async (chunk)=> {
 
@@ -56,7 +56,7 @@ const partReadInsert = async (fileName, readStream) => {
     });
     readStream.on('end', async ()=> {
       await methods.startQuery(fileName, bulk);
-      console.log(i);
+      //console.log(i);
       resolve(i);
     });
   });
@@ -92,7 +92,7 @@ describe('MySQL storing files', function() {
     });
   });
 
-  it('MySQL stores all given file(s) to table', async () => {
+  it.skip('MySQL stores all given file(s) to table', async () => {
     console.log("## Begin test: MySQL stores all given file(s) to table");
     let timeStart = new Date().getTime();
     let counter = 0;
@@ -115,44 +115,42 @@ describe('MySQL storing files', function() {
     console.log(" **  This action took " + ((new Date).getTime() - timeStart) + " ms");
   });
 
-  it.skip('MySQL inserts all file(s) under folder(s)', async function() {
+  it('MySQL inserts all file(s) under folder(s)', async function() {
     console.log("## Begin test: MySQL inserts all file(s) under single(multiple) folder(s)");
+    let fileList = await formFileList;
+    // after file list build up, mysql starts inserting files
+    console.log(`  -- MySQL has got ${fileList.fileNum} file(s) under ${fileList.folderNum} folder(s) --`);
     let timeStart = new Date().getTime();
 
-    formFileList.then(async (fileList) => {
-      // after file list build up, mysql starts inserting files
+    if (fileList.fileNum > 0) {
+      // mysql will insert files only when there is a file
 
-      console.log(`  -- MySQL has got ${fileList.fileNum} file(s) under ${fileList.folderNum} folder(s) --`);
+      let i = 0; // local file number counter
 
-      if (fileList.fileNum > 0) {
-        // mysql will insert files only when there is a file
-
-        let i = 0; // local file number counter
-
-        for (let file of fileList.files) {
-          let filePath = path.join(file.path, file.name);
-          let thisFile = {
-            name: file.name,
-            readStream: fs.createReadStream(filePath)
-          }
-
-          await methods.partReadInsert(thisFile.name, thisFile.readStream);
-          i++;
+      for (let file of fileList.files) {
+        let filePath = path.join(file.path, file.name);
+        let thisFile = {
+          name: file.name,
+          readStream: fs.createReadStream(filePath)
         }
-          // for over , so it's the last file mysql is handling with
-          console.log(" --> " + i + " file(s) has been inserted into MySQL");
-          console.log(" **  This action took " + ((new Date).getTime() - timeStart) + " ms");
 
-      } else {
-        console.warn("-------------------------------------------------------");
-        console.warn("--- Warning! There is nothing in the given folder! ---");
-        console.warn("-------------------------------------------------------");
-        console.log(" --> " + fileList.fileNum + " file(s) under " + fileList.folderNum + " folder(s) has been inserted into MySQL");
-        console.log(" **  This action took " + ((new Date).getTime() - timeStart) + " ms.");
-        done();
+        await methods.partReadInsert(thisFile.name, thisFile.readStream);
+        i++;
+        if (i % 100 === 0) {
+          console.log(`inserted ${i} files`);
+        }
       }
+        // for over , so it's the last file mysql is handling with
+        console.log(" --> " + i + " file(s) has been inserted into MySQL");
+        console.log(" **  This action took " + ((new Date).getTime() - timeStart) + " ms");
 
-    });
+    } else {
+      console.warn("-------------------------------------------------------");
+      console.warn("--- Warning! There is nothing in the given folder! ---");
+      console.warn("-------------------------------------------------------");
+      console.log(" --> " + fileList.fileNum + " file(s) under " + fileList.folderNum + " folder(s) has been inserted into MySQL");
+      console.log(" **  This action took " + ((new Date).getTime() - timeStart) + " ms.");
+    }
 
   });
 

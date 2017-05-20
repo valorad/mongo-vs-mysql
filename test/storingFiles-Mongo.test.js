@@ -39,7 +39,7 @@ describe("Mongo storing files", function() {
     // done();
   });
 
-  it('write all given files to mongo', (done) => {
+  it.skip('write all given files to mongo', (done) => {
       console.log("## Begin test: write all given files to mongo");
       let timeStart = new Date().getTime();
       let gfs = grid(mongoInstance.connection.db, mongoInstance.mongo);
@@ -66,13 +66,14 @@ describe("Mongo storing files", function() {
       });
   });
 
-  it.skip('write all files under single(multiple) folder(s) to mongo', (done) => {
+  it('write all files under single(multiple) folder(s) to mongo', (done) => {
     console.log("## Begin test: write all files under single(multiple) folder(s) to mongo");
-    let timeStart = new Date().getTime();
+    let timeStart;
     
     formFileList.then((fileList) => {
-
+      
       console.log(`  -- Mongo has received ${fileList.fileNum} file(s) under ${fileList.folderNum} folder(s) --`);
+      timeStart = new Date().getTime();
 
       if (fileList.fileNum > 0) {
         // only when there is a file, that mongo go storing.

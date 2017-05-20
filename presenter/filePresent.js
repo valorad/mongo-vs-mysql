@@ -47,7 +47,7 @@ function formFileList(folders) {
         //console.log("FP: end");
         if (folderCount >= folders.length) {
           // so it's the last folder. After scanning this, return results.
-          //console.log("FP: returned");
+          console.log("--- Walker finished scanning ---");
           resolve({
             files: givenFiles,
             folderNum: folderCount,
