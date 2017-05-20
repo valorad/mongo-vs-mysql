@@ -1,4 +1,4 @@
-CREATE DATABASE mvm CHARACTER SET utf8mb4 COLLATE utf8_general_ci
+CREATE DATABASE mvm CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
 
 use mvm
 
