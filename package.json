@@ -18,7 +18,7 @@
   "homepage": "https://github.com/wcxaaa/mongo-vs-mysql#readme",
   "dependencies": {
     "gridfs-stream": "^1.1.1",
-    "mongoose": "^4.9.3",
+    "mongoose": "^5.7.6",
     "mysql2": "^1.2.0",
     "walk": "^2.3.9"
   },
